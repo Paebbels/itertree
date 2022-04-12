@@ -45,47 +45,7 @@ STR = S = 1  # returns the string representation of the value (DTDataItems conta
 FULL = F = 2  # In case DTDataItem objects are used for storage the full object is given back
 
 
-class InterfaceDecoratorMetaClass(type):
-    def __init__(cls, clsname, bases, clsdict):
-        """
-        The interface decorator class is a metaclass that decorates the
-        interface in order to make sure that the interface is implemented
-        regardless of the way the user has overriden the class' methods.
-        Args:
-            clsname: name of class being defined
-            bases: tuple of base classes
-            clsdict: class' dictionary
-        """
-        super().__init__(clsname, bases, clsdict)
-        cls.method_format_check(clsdict, '_validator', (bool, str), ({0}, {None}))
-
-    def method_format_check(cls, clsdict, method, valid_type, compare_value_tuple):
-        """
-        method_format_check overwrites the return value in case it does not
-        comply with the type expected by the interface.
-        Args:
-            clsdict: class' dictionary
-            method: method to be checked for valid return value
-            valid_type: expected return type
-            compare_value_tuple: tuple that contains sets with expected values.
-        """
-        if method in clsdict:
-            def type_checker(*args, **kwargs):
-                """embedded decorator which tries to force the return value
-                into the one in the expected value.
-                """
-                new_result = list()
-                result = clsdict[method](*args, **kwargs)
-                for res, val_type, cmp_val in zip(result, valid_type, compare_value_tuple):
-                    if not isinstance(res, val_type):
-                        new_result.append(res in cmp_val)
-                    else:
-                        new_result.append(res)
-                return new_result
-            setattr(cls, method, type_checker)
-
-
-class iTDataModel(metaclass=InterfaceDecoratorMetaClass):
+class iTDataModel(object):
     """
     The default iTree data model class
     It's more the interface definition for specific data model classes that might be created using this superclass
