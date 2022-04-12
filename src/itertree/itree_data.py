@@ -33,6 +33,7 @@ This part of code contains the helper functions related to the iTree data attrib
 import abc
 import copy
 from collections import OrderedDict
+import abc
 
 
 # special internal constant used for the item that is stored without giving a key
@@ -45,7 +46,7 @@ STR = S = 1  # returns the string representation of the value (DTDataItems conta
 FULL = F = 2  # In case DTDataItem objects are used for storage the full object is given back
 
 
-class iTDataModel(object):
+class iTDataModel(abc.ABC):
     """
     The default iTree data model class
     It's more the interface definition for specific data model classes that might be created using this superclass
@@ -72,7 +73,6 @@ class iTDataModel(object):
         self._value = value
         self._formatter_cache = None
 
-    @property
     def is_empty(self):
         """
         tells if the iTreeDataModel is empty or contains a value
@@ -99,17 +99,9 @@ class iTDataModel(object):
         self._value = __NOVALUE__
         return v
 
+    @abc.abstractmethod
     def _validator(self, value):
-        """
-        Here we check the value
-
-        In case check fails an iTreeValidationError is raised
-
-        :param value: to be checked against the model
-
-        """
-        # we actually accept here any value
-        return True,'ok'
+        """return validated value or raise ValueError"""
 
     def _formatter(self,value=None):
         """
@@ -131,16 +123,9 @@ class iTDataModel(object):
             value = self._value
         return str(value)
 
-    def set(self, value):
-        """
-        put a specific value into the data model
-        :except: raises an iTreeValidationError in case a not matching object is given
-        :param value: value object to be placed in the data model
-        :return:
-        """
-        state,text=self._validator(value)
-        if state !=True:
-            raise TypeError(text)
+    @value.setter
+    def value(self, value):
+        value = self._validator(value)
         self._value = value
         self._formatter_cache = None
 
@@ -150,7 +135,11 @@ class iTDataModel(object):
         :param value: value object to be checked
         :return: tuple (True/False, checking text string)
         """
-        return self._validator(value)
+        try:
+            self._validator(value)
+            return True
+        except ValueError:
+            return False
 
     def __contains__(self, item):
         """
